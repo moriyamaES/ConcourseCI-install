@@ -1771,55 +1771,6 @@ Docker Compose version v2.20.3
     https://note.com/shift_tech/n/nead03c02b095
 
 
-- docker-compose.yml の作成
-
-```
-# cd /root/ConcourseCI-install
-```
-
-```
-# touch docker-compose.yml
-```
-
-docker-compose.yml に以下を記入
-```
-version: '3'
-services:
- concourse-db:
-   image: postgres:9.5
-   environment:
-     POSTGRES_DB: concourse
-     POSTGRES_USER: concourse
-     POSTGRES_PASSWORD: changeme
-     PGDATA: /database
- concourse-web:
-   image: concourse/concourse
-   links: [concourse-db]
-   depends_on: [concourse-db]
-   command: web
-   privileged: true
-   restart: unless-stopped
-   ports: ["8080:8080", "2222:2222"]
-   volumes: ["./keys/web:/concourse-keys"]
-   environment:
-     CONCOURSE_EXTERNAL_URL: http://localhost:8080
-     CONCOURSE_POSTGRES_HOST: concourse-db
-     CONCOURSE_POSTGRES_USER: concourse
-     CONCOURSE_POSTGRES_DATABASE: concourse
-     CONCOURSE_POSTGRES_PASSWORD: changeme
-     CONCOURSE_ADD_LOCAL_USER: test:test
-     CONCOURSE_MAIN_TEAM_LOCAL_USER: test
- concourse-worker:
-   image: concourse/concourse
-   privileged: true
-   links: [concourse-web]
-   depends_on: [concourse-web]
-   command: worker
-   volumes: ["./keys/worker:/concourse-keys"]
-   environment:
-     CONCOURSE_TSA_HOST: concourse-web:2222
-```
-
 - 以下を実行
 
     ```
@@ -1830,49 +1781,60 @@ services:
     # git clone https://github.com/concourse/concourse-docker
     ```
 
+    - docker-compose.yml をコピー
+
+        ```
+        # ll ~/ConcourseCI-install
+        ```
+
+        ```
+        # cp ../concourse-docker/docker-compose.yml .
+        ```
+    
     - keyフォルダをdocker-compose.yml と同じフォルダにコピー
-    ```
-    # cp -r  ~/concourse-docker/keys/    ~/ConcourseCI-install/
-    ```
 
-    ```
-    # ll ~/ConcourseCI-install
-    合計 96
-    -rw-r--r--. 1 root root 92699  8月 15 20:33 README.md
-    -rw-r--r--. 1 root root  1006  8月 15 20:26 docker-compose.yml
-    drwxr-xr-x. 4 root root    47  8月 15 20:32 keys
-    ```
+        ```
+        # cp -r  ~/concourse-docker/keys/    ~/ConcourseCI-install/
+        ```
+        ```
+        # ll ~/ConcourseCI-install
+        合計 96
+        -rw-r--r--. 1 root root 92699  8月 15 20:33 README.md
+        -rw-r--r--. 1 root root  1006  8月 15 20:26 docker-compose.yml
+        drwxr-xr-x. 4 root root    47  8月 15 20:32 keys
+        ```
 
-    ```
-    # ll ~/ConcourseCI-install/keys/
-    合計 4
-    -rwxr-xr-x. 1 root root 617  8月 15 20:32 generate
-    drwxr-xr-x. 2 root root  22  8月 15 20:32 web
-    drwxr-xr-x. 2 root root  22  8月 15 20:32 worker
-    ```
+        ```
+        # ll ~/ConcourseCI-install/keys/
+        合計 4
+        -rwxr-xr-x. 1 root root 617  8月 15 20:32 generate
+        drwxr-xr-x. 2 root root  22  8月 15 20:32 web
+        drwxr-xr-x. 2 root root  22  8月 15 20:32 worker
+        ```
 
     -  generate を実行
-    ``` 
-    #  ~/ConcourseCI-install/keys/generate 
-    Unable to find image 'concourse/concourse:latest' locally
-    latest: Pulling from concourse/concourse
-    f7cdc50d9449: Pull complete 
-    f976864fe298: Pull complete 
-    ea8f02e90e81: Pull complete 
-    64409b1e865b: Pull complete 
-    4a13e817f670: Pull complete 
-    a809f4c15750: Pull complete 
-    c62956abf66d: Pull complete 
-    585225b84b15: Pull complete 
-    d9f6653b1de9: Pull complete 
-    Digest: sha256:d35fea8f50f6b1400a1e39e23701582c18f84d558f5b631d33c4e0932d03755d
-    Status: Downloaded newer image for concourse/concourse:latest
-    wrote private key to /keys/session_signing_key
-    wrote private key to /keys/tsa_host_key
-    wrote ssh public key to /keys/tsa_host_key.pub
-    wrote private key to /keys/worker_key
-    wrote ssh public key to /keys/worker_key.pub
-    ```
+
+        ``` 
+        #  ~/ConcourseCI-install/keys/generate 
+        Unable to find image 'concourse/concourse:latest' locally
+        latest: Pulling from concourse/concourse
+        f7cdc50d9449: Pull complete 
+        f976864fe298: Pull complete 
+        ea8f02e90e81: Pull complete 
+        64409b1e865b: Pull complete 
+        4a13e817f670: Pull complete 
+        a809f4c15750: Pull complete 
+        c62956abf66d: Pull complete 
+        585225b84b15: Pull complete 
+        d9f6653b1de9: Pull complete 
+        Digest: sha256:d35fea8f50f6b1400a1e39e23701582c18f84d558f5b631d33c4e0932d03755d
+        Status: Downloaded newer image for concourse/concourse:latest
+        wrote private key to /keys/session_signing_key
+        wrote private key to /keys/tsa_host_key
+        wrote ssh public key to /keys/tsa_host_key.pub
+        wrote private key to /keys/worker_key
+        wrote ssh public key to /keys/worker_key.pub
+        ```
 
     - ここまででConcourse CIのインストールの準備は完了です。
 
@@ -1889,27 +1851,64 @@ services:
     - 結果
 
         ```
-        [+] Running 15/15
-        ✔ concourse-db 14 layers [⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿]      0B/0B      Pulled                                                                                                                                         16.2s 
-        ✔ fa1690ae9228 Pull complete                                                                                                                                                                            1.9s 
-        ✔ a73f6e07b158 Pull complete                                                                                                                                                                            1.0s 
-        ✔ 973a0c44ddba Pull complete                                                                                                                                                                            0.7s 
-        ✔ 07e5342b01d4 Pull complete                                                                                                                                                                            1.5s 
-        ✔ 578aad0862c9 Pull complete                                                                                                                                                                            3.1s 
-        ✔ a0b157088f7a Pull complete                                                                                                                                                                            2.2s 
-        ✔ 6c9046f06fc5 Pull complete                                                                                                                                                                            2.5s 
-        ✔ ae19407bdc48 Pull complete                                                                                                                                                                            2.8s 
-        ✔ e53b7c20aa96 Pull complete                                                                                                                                                                            4.5s 
-        ✔ a135edcc0831 Pull complete                                                                                                                                                                            8.4s 
-        ✔ fed07b1b1b94 Pull complete                                                                                                                                                                            8.4s 
-        ✔ 18d9026fcfbd Pull complete                                                                                                                                                                            8.4s 
-        ✔ 4d2d5fae97d9 Pull complete                                                                                                                                                                            9.1s 
-        ✔ d419466e642d Pull complete                                                                                                                                                                            9.3s 
+        [+] Running 14/14
+        ✔ db 13 layers [⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿]      0B/0B      Pulled                                                                                                                                                                                           22.2s 
+        ✔ 648e0aadf75a Already exists                                                                                                                                                                                                                  0.0s 
+        ✔ f715c8c55756 Pull complete                                                                                                                                                                                                                   0.7s 
+        ✔ b11a1dc32c8c Pull complete                                                                                                                                                                                                                   0.9s 
+        ✔ f29e8ba9d17c Pull complete                                                                                                                                                                                                                   0.8s 
+        ✔ 78af88a8afb0 Pull complete                                                                                                                                                                                                                   1.8s 
+        ✔ b74279c188d9 Pull complete                                                                                                                                                                                                                   1.8s 
+        ✔ 6e3e5bf64fd2 Pull complete                                                                                                                                                                                                                   1.6s 
+        ✔ b62a2c2d2ce5 Pull complete                                                                                                                                                                                                                   2.2s 
+        ✔ 8fd97c27b3fa Pull complete                                                                                                                                                                                                                   6.0s 
+        ✔ cb70616b7657 Pull complete                                                                                                                                                                                                                   2.5s 
+        ✔ d8ada539301f Pull complete                                                                                                                                                                                                                   3.1s 
+        ✔ c60b6f73552c Pull complete                                                                                                                                                                                                                   3.4s 
+        ✔ 665d514d2b02 Pull complete                                                                                                                                                                                                                   3.9s 
         [+] Running 4/4
-        ✔ Network concourseci-install_default               Created                                                                                                                                               0.2s 
-        ✔ Container concourseci-install-concourse-db-1      Started                                                                                                                                               0.5s 
-        ✔ Container concourseci-install-concourse-web-1     Started                                                                                                                                               0.1s 
-        ✔ Container concourseci-install-concourse-worker-1  Started          
+        ✔ Network concourseci-install_default     Created                                                                                                                                                                                                0.2s 
+        ✔ Container concourseci-install-db-1      Started                                                                                                                                                                                                0.4s 
+        ✔ Container concourseci-install-web-1     Started                                                                                                                                                                                                0.0s 
+        ✔ Container concourseci-install-worker-1  Started          ```
         ```
 
 1. ブラウザでhttp://localhost:8080にアクセスする
+
+
+-  Concourse CI のインストール手順(簡単な操作)
+
+    https://note.com/shift_tech/n/nead03c02b095
+
+
+- Concourse CI のチュートリアル
+
+    https://concoursetutorial-ja.site.lkj.io/
+
+
+## flyコマンドのインストール
+
+- 以下のサイトのAssetsにて
+
+    https://github.com/concourse/concourse/releases
+
+-  2023-08-15 時点の最新版である fly-7.10.0-linux-amd64.tgz を選択
+
+    https://github.com/concourse/concourse/releases/download/v7.10.0/fly-7.10.0-linux-amd64.tgz
+
+- 以下のコマンドを実行
+
+
+    ```
+    # curl -L https://github.com/concourse/concourse/releases/download/v7.10.0/fly-7.10.0-linux-amd64.tgz > /tmp/fly
+    ```
+    ```
+    # mv /tmp/fly /usr/local/bin/fly
+    ```
+    ```
+    # chmod 775 /usr/local/bin/fly
+    ```
+
+    ```
+    # chmod 755 /usr/local/bin/fly
+    ```
