@@ -1783,6 +1783,10 @@ Docker Compose version v2.20.3
 
     - docker-compose.yml をコピー
 
+        - [参考にしたサイト](https://note.com/shift_tech/n/nead03c02b095)では、Concourse CIのコンテナが正常動作しなかった（http通信ができない模様）。
+
+        - このため、docker-compose.ymlは、[GitHub](https://github.com/concourse/concourse-docker)から取得する（これにより、Concourse CIにてhttp通信ができた）
+
         ```
         # ll ~/ConcourseCI-install
         ```
