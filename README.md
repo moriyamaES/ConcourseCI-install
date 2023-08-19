@@ -1939,6 +1939,7 @@ Docker Compose version v2.20.3
 
 ## flyコマンドのインストール
 
+<del>
 - 以下のサイトのAssetsにて
 
     https://github.com/concourse/concourse/releases
@@ -1976,6 +1977,36 @@ https://github.com/concourse/concourse/releases/download/v7.9.1/fly-7.9.1-linux-
 
  curl -L https://github.com/concourse/concourse/releases/download/v3.5.0/fly_linux_amd64 > /tmp/fly
 
+</del>
+
+1. 以下のサイトを参考にしてインストール
+
+    https://github.com/concourse/concourse/tree/master/fly
+
+
+1. Fly は Concourse UI の右下隅からダウンロードできます
+
+    ![fly_download_ui.png](./img/fly_download_ui.png)
+
+1. ここでは、ダウンロードした「fly」ファイルを「~/ConcourseCI-install」に置いた
+
+1. fly をインストールする
+
+    ```
+    # install ~/ConcourseCI-install/fly /usr/local/bin
+    ```
+
+1. 利用可能かどうかを確認するには 
+
+    ```
+    # which fly
+    /usr/local/bin/fly
+    ```
+
+    ```
+    # fly -v
+    7.10.0
+    ```
 
 ## 申送り事項
 
