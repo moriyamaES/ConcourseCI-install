@@ -1407,6 +1407,24 @@ saved_entry=CentOS Linux (3.10.0-1160.el7.x86_64) 7 (Core)
 # rm -f crictl-$VERSION-linux-amd64.tar.g
 ```
 
+- オーナーをrootにする
+
+```
+# chown root:root /usr/local/bin/crictl 
+```
+```
+ll /usr/local/bin/
+合計 346192
+-rwxr-xr-x. 1 root root 41664512  8月 15 18:52 cri-dockerd
+-rwxr-xr-x. 1 root root 54939628  8月 14 16:10 crictl
+-rwxr-xr-x. 1 root root 59383631  8月 13 23:21 docker-compose
+-rwxrwxr-x. 1 root root 16633418  8月 15 22:01 fly
+-rwxr-xr-x. 1 root root 46182400  8月 13 07:47 helm
+-rwxr-xr-x. 1 root root 49262592  8月 15 13:39 kubectl
+-rwxr-xr-x. 1 root root 86430510  8月 15 17:24 minikube
+```
+
+
 ```
 # crictl -v
 crictl version v1.28.0
@@ -1482,6 +1500,7 @@ crictl version v1.28.0
         # ll /usr/local/go
         ```
 
+    <del>
     1. Add /usr/local/go/bin to the PATH environment variable
 
         ```
@@ -1492,6 +1511,34 @@ crictl version v1.28.0
         # echo $PATH
         /root/.krew/bin:/root/.vscode-server/bin/6c3e3dba23e8fadc360aed75ce363ba185c49794/bin/remote-cli:/root/.krew/bin:/root/.krew/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/root/bin:/usr/local/go/bin
         ```
+    </del>
+
+    1. 環境変数 $PATH に /usr/local/go/bin を永続化する
+
+        1. /etc/profile　をviで開く
+
+            ```
+            # vi /etc/profile 
+            ```
+
+        1. 文末に以下の行を追加し、保存する
+
+            ```
+            export PATH=$PATH:/usr/local/go/bin
+            ```
+
+        1. サーバを再起動する
+
+            ```
+            # shutdown -r
+            ```
+
+        1. 環境変数 PATH への /usr/local/go/bin の追加を確認する
+
+            ```
+            # echo $PATH
+            /root/.krew/bin:/root/.vscode-server/bin/6c3e3dba23e8fadc360aed75ce363ba185c49794/bin/remote-cli:/root/.krew/bin:/root/.krew/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/root/bin:/usr/local/go/bin
+            ```
 
     3. Verify that you've installed Go by opening a command prompt and typing the following command
 
@@ -1527,7 +1574,7 @@ crictl version v1.28.0
 
 - cri-dockerd を インストール
 
-q
+
     ```
     # install -o root -g root -m 0755 cri-dockerd /usr/local/bin/cri-dockerd
     ```
@@ -1914,5 +1961,74 @@ Docker Compose version v2.20.3
     ```
 
     ```
-    # chmod 755 /usr/local/bin/fly
+    # fly -v
+    ```
+
+https://github.com/concourse/concourse/tags
+
+
+https://github.com/concourse/concourse/releases/download/v7.9.1/fly-7.9.1-linux-amd64.tgz
+
+
+    # curl -L https://github.com/concourse/concourse/releases/download/v7.9.1/fly-7.9.1-linux-amd64.tgz > /tmp/fly
+
+---
+
+ curl -L https://github.com/concourse/concourse/releases/download/v3.5.0/fly_linux_amd64 > /tmp/fly
+
+
+## 申送り事項
+
+- 以下の件が未解決と認識
+
+1. crictl のオーナ、グループがrootになっていないのはなぜ？(なんとなく気持ち悪い) → 2023-08-19 対応
+
+<del>
+    ```
+    # ll /usr/local/bin/
+    合計 346192
+    -rwxr-xr-x. 1 root     root  41664512  8月 15 18:52 cri-dockerd
+    -rwxr-xr-x. 1 kazuhiro users 54939628  8月 14 16:10 crictl
+    -rwxr-xr-x. 1 root     root  59383631  8月 13 23:21 docker-compose
+    -rwxrwxr-x. 1 root     root  16633418  8月 15 22:01 fly
+    -rwxr-xr-x. 1 root     root  46182400  8月 13 07:47 helm
+    -rwxr-xr-x. 1 root     root  49262592  8月 15 13:39 kubectl
+    -rwxr-xr-x. 1 root     root  86430510  8月 15 17:24 minikube
+    ```
+</del>
+1. helm はまだ使用していないため、削除したい
+
+    ```
+    # ll /usr/local/bin/
+    合計 346192
+    -rwxr-xr-x. 1 root     root  41664512  8月 15 18:52 cri-dockerd
+    -rwxr-xr-x. 1 kazuhiro users 54939628  8月 14 16:10 crictl
+    -rwxr-xr-x. 1 root     root  59383631  8月 13 23:21 docker-compose
+    -rwxrwxr-x. 1 root     root  16633418  8月 15 22:01 fly
+    -rwxr-xr-x. 1 root     root  46182400  8月 13 07:47 helm
+    -rwxr-xr-x. 1 root     root  49262592  8月 15 13:39 kubectl
+    -rwxr-xr-x. 1 root     root  86430510  8月 15 17:24 minikube
+    ```
+
+1. fly は、v3.5.0 は動作したが、最新のv7.10.0 が動作しないのはなぜ？
+
+1. minikube の起動時に表示される以下の推奨メッセージに対しての対応
+
+    ```
+    ❗  'none' ドライバーは既存 VM の統合が必要なエキスパートに向けて設計されています。
+    💡  多くのユーザーはより新しい 'docker' ドライバーを代わりに使用すべきです (root 権限が必要ありません！)
+    📘  追加の詳細情報はこちらを参照してください: https://minikube.sigs.k8s.io/docs/reference/drivers/none/
+
+    ```
+
+1. minikube の起動時に表示される以下の推奨メッセージに対しての対応
+
+    ```
+    ❗  kubectl と minikube の構成は /root に保存されます
+    ❗  kubectl か minikube コマンドを独自のユーザーとして使用するためには、そのコマンドの再配置が必要な場合があります。たとえば、独自の設定を上書きするためには、以下を実行します
+
+        ▪ sudo mv /root/.kube /root/.minikube $HOME
+        ▪ sudo chown -R $USER $HOME/.kube $HOME/.minikube
+
+    💡  これは環境変数 CHANGE_MINIKUBE_NONE_USER=true を設定して自動的に行うこともできます
     ```
