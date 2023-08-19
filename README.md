@@ -1996,6 +1996,7 @@ https://github.com/concourse/concourse/releases/download/v7.9.1/fly-7.9.1-linux-
     # install ~/ConcourseCI-install/fly /usr/local/bin
     ```
 
+
 1. 利用可能かどうかを確認するには 
 
     ```
@@ -2012,9 +2013,10 @@ https://github.com/concourse/concourse/releases/download/v7.9.1/fly-7.9.1-linux-
 
 - 以下の件が未解決と認識
 
+<del>
 1. crictl のオーナ、グループがrootになっていないのはなぜ？(なんとなく気持ち悪い) → 2023-08-19 対応
 
-<del>
+
     ```
     # ll /usr/local/bin/
     合計 346192
@@ -2027,6 +2029,7 @@ https://github.com/concourse/concourse/releases/download/v7.9.1/fly-7.9.1-linux-
     -rwxr-xr-x. 1 root     root  86430510  8月 15 17:24 minikube
     ```
 </del>
+
 1. helm はまだ使用していないため、削除したい
 
     ```
@@ -2041,7 +2044,10 @@ https://github.com/concourse/concourse/releases/download/v7.9.1/fly-7.9.1-linux-
     -rwxr-xr-x. 1 root     root  86430510  8月 15 17:24 minikube
     ```
 
+<del>
 1. fly は、v3.5.0 は動作したが、最新のv7.10.0 が動作しないのはなぜ？
+</del>
+
 
 1. minikube の起動時に表示される以下の推奨メッセージに対しての対応
 
@@ -2063,3 +2069,201 @@ https://github.com/concourse/concourse/releases/download/v7.9.1/fly-7.9.1-linux-
 
     💡  これは環境変数 CHANGE_MINIKUBE_NONE_USER=true を設定して自動的に行うこともできます
     ```
+
+## Concourse CI の操作
+
+- 「Concourse CI のチュートリアル」を参考にした
+
+https://concoursetutorial-ja.site.lkj.io/
+
+<del>
+1. まず、tutorial という名前でエイリアスを作ります。
+
+    ```
+    # fly --target=tutorial login --concourse-url=http://127.0.0.1:8080 --username=admin --password=admin
+    ```
+
+    ```
+    # fly --target=tutorial sync
+    ```
+    
+
+however, your token could not be
+sent to fly.
+
+copy token here
+bearer xodwZstAbldUCYxPZMfVYGig+FTL1+FkAAAAAA
+token copied
+after copying, return to fly and paste
+your token into the prompt.
+
+
+
+The default configuration sets up a test user with test as their password and grants them access to main team.
+
+
+    fly --target <target_name> login --concourse-url <concourse_url>
+
+
+    fly --target main login --concourse-url http://localhost:8080
+
+
+```
+# fly --target main login --concourse-url http://localhost:8080
+logging in to team 'main'
+
+navigate to the following URL in your browser:
+
+  http://localhost:8080/login?fly_port=37123
+
+or enter token manually (input hidden): 
+```
+
+bearer xodwZstAbldUCYxPZMfVYGig+FTL1+FkAAAAAA
+
+    ```
+    # fly --target main login --concourse-url http://localhost:8080
+    logging in to team 'main'
+
+    navigate to the following URL in your browser:
+
+    http://localhost:8080/login?fly_port=38221
+
+    or enter token manually (input hidden): 
+    target saved
+    ```    
+
+```
+# fly --target=tutorial login --concourse-url=http://127.0.0.1:8080 --username=admin --password=admin
+logging in to team 'main'
+
+error: oauth2: cannot fetch token: 401 Unauthorized
+Response: {"error":"access_denied","error_description":"Invalid username or password"}
+```
+
+```
+# fly --target=tutorial login --concourse-url=http://127.0.0.1:8080 --username=test --password=test
+```
+
+```
+# fly --target=main login --concourse-url=http://127.0.0.1:8080 --username=test --password=test
+```
+
+----
+ここから本番
+
+    ```
+    # fly --target=tutorial login --concourse-url=http://127.0.0.1:8080 --username=test --password=test
+    ```
+
+- 結果
+
+    ```
+    logging in to team 'main'
+
+
+    target saved
+    ```
+
+
+    ```
+    # ll  ~/.flyrc
+    -rw-------. 1 root root 149  8月 19 18:56 /root/.flyrc
+    ```
+
+    ```
+    # cat  ~/.flyrc
+    targets:
+    tutorial:
+        api: http://127.0.0.1:8080
+        team: main
+        token:
+        type: bearer
+        value: WZ2lx4+T+qYEIC9WX9wFxbKohVU54+FkAAAAAA
+    ```
+
+
+    ```
+    # fly --target=tutorial sync
+    version 7.10.0 already matches; skipping
+    ```
+
+
+
+    bearer c2Lh7iB9r7C1WZP9Tq6c/TbmZRA03uFkAAAAAA
+
+</del>
+
+----
+ここまでのまとめ
+
+- 以下とサイトの情報を元にとりあえず、暫定のログイン手順を考えた
+
+    https://github.com/concourse/concourse-docker
+
+    https://note.com/shift_tech/n/nead03c02b095
+
+    https://concoursetutorial-ja.site.lkj.io/
+
+- Concourse CI のデフォルトユーザは、ユーザID: test、パスワード: test
+
+- `target=tutorial` として以下のコマンドを実行すると、
+
+    ```
+    # fly --target=tutorial login --concourse-url=http://127.0.0.1:8080 --username=test --password=test
+    logging in to team 'main'
+
+
+    target saved
+    ```
+- 以下の内容で、`~/.flyc` が作成される。
+
+    ```
+    # cat ~/.flyrc
+    targets:
+    tutorial:
+        api: http://localhost:8080
+        team: main
+        token:
+        type: bearer
+        value: s19GPpnQJKkszlNwzCL7nf85Oh8W6OFkAA
+    ```
+
+
+- ここでとりあえず以下のコマンドを実行してみる(理由は不明)
+
+    ```
+    # fly --target=tutorial sync
+    ```
+
+- 更に以下のコマンドを実行すると
+
+    ```
+    # fly --target tutorial login --concourse-url http://localhost:8080
+    ```
+
+    - 問合せ
+
+        ```
+        logging in to team 'main'
+
+        navigate to the following URL in your browser:
+
+        http://localhost:8080/login?fly_port=35193
+
+        token must be of the format 'TYPE VALUE', e.g. 'Bearer ...'
+        or enter token manually (input hidden):
+        ```
+
+    - が表示されるので、`~/.flyrc` からトークン `bearer s19GPpnQJKkszlNwzCL7nf85Oh8W6OFkAA` の文字列を作成し、コピーし、`(input hidden):` の後ろにペーストして Enterキーを押下すると以下の応答がかえってくる
+
+        ```
+        target saved
+        ```
+    - これで、http://localhost:8080 に ユーザID: test、パスワード: test でログインできるようになる
+
+    - これで良いかは分からないが、とりあえずこれで実行
+
+## Concourse CI のチュートリアル実施
+
+
