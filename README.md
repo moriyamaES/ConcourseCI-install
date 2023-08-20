@@ -2592,4 +2592,248 @@ succeeded
 
 </del>
 
+## Resource について
 
+- 以下のサイトを参照
+
+    https://concoursetutorial-ja.site.lkj.io/basics/pipeline-resources
+
+
+## Resource について（Fork版）
+
+- [Resource について](https://concoursetutorial-ja.site.lkj.io/basics/pipeline-resources)の内容がよくわからないかったので、[concourse-tutorial](https://github.com/starkandwayne/concourse-tutorial.git)をForkして検証してみる
+
+
+- concourse-tutorial （Fork版）のURLは以下
+
+~~https://github.com/moriyamaES/concourse-tutorial-fork~~
+
+    https://github.com/moriyamaES/concourse-tutorial
+
+
+- 以下のコマンドを実行
+
+    ```
+    # cd ~
+    ```
+
+    ```
+    # git clone https://github.com/moriyamaES/concourse-tutorial
+    ```
+
+    ```
+    # cd ./concourse-tutorial/tutorials/basic/pipeline-resources/
+    ```
+    ```
+    # ll
+    合計 8
+    -rw-r--r--. 1 root root 361  8月 20 14:19 pipeline.yml
+    -rwxr-xr-x. 1 root root 422  8月 20 14:19 test.sh
+    ```
+
+
+
+- `develop`ブランチにチェックアウト
+
+    ```
+    # git checkout develop 
+    branch 'develop' set up to track 'origin/develop'.
+    Switched to a new branch 'develop'
+    ```
+
+- task-hello-world.yml をコピーして`args: [こんにちは世界]`に変更して、 `task_konnichiha_sekei.yml` を作成
+
+    ```
+    # pwd
+    /root/concourse-tutorial-fork/tutorials/basic/pipeline-resources
+    # cat ../task-hello-world/task_konnichiha_sekei.yml 
+    ---
+    platform: linux
+
+    image_resource:
+    type: docker-image
+    source: {repository: busybox}
+
+    run:
+    path: echo
+    args: [こんにちは世界]
+    ```
+
+- pipeline.yml をコピーしてuriを`uri: https://github.com/moriyamaES/concourse-tutorial-fork`に変更し、`file: resource-tutorial/tutorials/basic/task-hello-world/`pipeline-fork.yml 作成
+
+    ```
+    [root@control-plane ~/concourse-tutorial-fork/tutorials/basic/pipeline-resources (master)]
+    # cat pipeline-fork.yml 
+    ---
+    resources:
+    - name: resource-tutorial
+        type: git
+        source:
+        uri: https://github.com/moriyamaES/concourse-tutorial-fork
+
+        branch: develop
+
+    jobs:
+    - name: job-hello-world
+        public: true
+        plan:
+        - get: resource-tutorial
+        - task: hello-world
+            file: resource-tutorial/tutorials/basic/task-hello-world/task_konnichiha_sekei.yml
+    ```
+
+#### ここで、git push を実行すると認証エラーが発生した
+
+- 発生したエラーは以下
+
+    ```
+    [root@control-plane ~/concourse-tutorial-fork/tutorials/basic/pipeline-resources (develop)]
+    # git push origin develop 
+    Missing or invalid credentials.
+    Error: connect ECONNREFUSED /run/user/0/vscode-git-7efb4657a5.sock
+        at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1247:16) {
+    errno: -111,
+    code: 'ECONNREFUSED',
+    syscall: 'connect',
+    address: '/run/user/0/vscode-git-7efb4657a5.sock'
+    }
+    Missing or invalid credentials.
+    Error: connect ECONNREFUSED /run/user/0/vscode-git-7efb4657a5.sock
+        at PipeConnectWrap.afterConnect [as oncomplete] (node:net:1247:16) {
+    errno: -111,
+    code: 'ECONNREFUSED',
+    syscall: 'connect',
+    address: '/run/user/0/vscode-git-7efb4657a5.sock'
+    }
+    remote: No anonymous write access.
+    fatal: Authentication failed for 'https://github.com/moriyamaES/concourse-tutorial-fork/'
+
+    ```
+
+- CahGPTによると、エラーメッセージに`vscode-git`が含まれているため、Vscode特有のエラーの可能性があるとのこと
+
+- そこで、Teatermで実行したところ、以下のメッセージが表示された。username と password は、自分のGitHubアカントを入力
+
+    ```
+    # git push -u origin add-featur
+    Username for 'https://github.com': moriyamaES
+    Password for 'https://moriyamaES@github.com':
+    remote: Support for password authentication was removed on August 13, 2021.
+    remote: Please see https://docs.github.com/en/get-started/getting-started-with-git/about-remote-repositories#cloning-with-https-urls for information on currently recommended modes of authentication.
+    fatal: Authentication failed for 'https://github.com/moriyamaES/concourse-tutorial/'
+    ```
+
+- GhatGPTによると、アクセストークンの設定が必要とのこと
+
+- gitHUbのサイトにて以下にアクセストークンを作成した
+
+    ```
+    https://github.com/settings/tokens
+    ```
+
+-  アクセストークンは過去に作成したものに習い以下とした
+
+    - note:`udemy-git3`
+
+    - repo: オン
+
+    - workflow: オン
+
+    - write:packages: オン
+
+    - Expiration: `30days`
+
+- GhatGPTによると、以下のコマンドを実行し、
+
+    -Gitの認証情報を更新:ターミナルで以下のコマンドを実行して、Gitの認証情報をアップデートします。アクセストークンをパスワードの代わりに使用します
+
+  とあるので実行した
+
+    ```
+    # git config --global credential.helper store
+    
+    ```
+    
+     ※以下のコマンドを実行したが、応答がないため、Ctrl-C で中断した
+    ```
+    # git credential-store --file ~/.git-credentials store
+
+    ```
+
+- 再度、`git push` を実行した。パスワードにはアクセストークンを入力した
+
+    ```
+    [root@control-plane ~/concourse-tutorial (add-featur)]
+    # git push -u origin add-featur
+    Username for 'https://github.com': moriyamaES
+    Password for 'https://moriyamaES@github.com':
+    Enumerating objects: 5, done.
+    Counting objects: 100% (5/5), done.
+    Delta compression using up to 2 threads
+    Compressing objects: 100% (3/3), done.
+    Writing objects: 100% (3/3), 314 bytes | 314.00 KiB/s, done.
+    Total 3 (delta 2), reused 0 (delta 0), pack-reused 0
+    remote: Resolving deltas: 100% (2/2), completed with 2 local objects.
+    remote:
+    remote: Create a pull request for 'add-featur' on GitHub by visiting:
+    remote:      https://github.com/moriyamaES/concourse-tutorial/pull/new/add-featur
+    remote:
+    To https://github.com/moriyamaES/concourse-tutorial
+    * [new branch]      add-featur -> add-featur
+    ```
+
+
+
+    ```
+    # pwd
+    /root/concourse-tutorial-fork/tutorials/basic/pipeline-resources
+    ```
+
+    ```
+    # fly -t tutorial set-pipeline -c pipeline-fork.yml -p hello-world
+    ```
+    - 結果
+
+        ```
+        resources:
+        resource resource-tutorial has changed:
+        name: resource-tutorial
+        source:
+            branch: develop
+        -   uri: https://github.com/starkandwayne/concourse-tutorial.git
+        +   uri: https://github.com/moriyamaES/concourse-tutorial-fork
+        type: git
+        
+        jobs:
+        job job-hello-world has changed:
+        name: job-hello-world
+        plan:
+        - get: resource-tutorial
+        - - file: resource-tutorial/tutorials/basic/task-hello-world/task_hello_world.yml
+        + - file: resource-tutorial/tutorials/basic/task-hello-world/task_konnichiha_sekei.yml
+            task: hello-world
+        public: true
+        
+        pipeline name: hello-world
+
+        apply configuration? [yN]: y
+        configuration updated    
+        ```
+
+-  concourse にログイン
+
+    ```
+    # fly --target tutorial login --concourse-url http://10.1.1.200:8080
+    ```
+
+    - 表示されたURLでブラウザにアクセスし、表示されたトークンを`(input hidden):`の後ろにコピーする
+
+        ```
+        logging in to team 'main'
+
+        navigate to the following URL in your browser:
+
+        http://10.1.1.200:8080/login?fly_port=45953
+
+        or enter token manually (input hidden): 
+        ```
