@@ -2195,6 +2195,8 @@ Response: {"error":"access_denied","error_description":"Invalid username or pass
 </del>
 
 ----
+### concourse のログインにいて
+
 ここまでのまとめ
 
 - 以下とサイトの情報を元にとりあえず、暫定のログイン手順を考えた
@@ -2242,6 +2244,11 @@ Response: {"error":"access_denied","error_description":"Invalid username or pass
     # fly --target tutorial login --concourse-url http://localhost:8080
     ```
 
+    または
+    ```
+    # fly --target tutorial login --concourse-url http://10.1.1.200:8080
+    ```
+
     - 問合せ
 
         ```
@@ -2265,5 +2272,324 @@ Response: {"error":"access_denied","error_description":"Invalid username or pass
     - これで良いかは分からないが、とりあえずこれで実行
 
 ## Concourse CI のチュートリアル実施
+
+### Hello World
+
+- 以下のサイトを参考に実施
+
+    https://concoursetutorial-ja.site.lkj.io/basics/task-hello-world
+
+```
+# cd ~/ConcourseCI-install
+```
+
+```
+# docker-compose up -d
+```
+
+```
+# cd ~
+```
+
+```
+git clone  git@github.com:Qarik-Group/concourse-tutorial.git
+```
+
+```
+# cd ./concourse-tutorial/tutorials/basic/task-hello-world/
+```
+
+<del>
+
+```
+# fly -t tutorial execute -c task_hello_world.yml
+```
+    - 結果
+
+    ```
+    fly -t tutorial execute -c task_hello_world.yml
+    could not find a valid token.
+    logging in to team 'main'
+
+    navigate to the following URL in your browser:
+
+    http://localhost:8080/login?fly_port=46787
+    ```
+
+
+bearer KQnxZBOmxVkuItYcI1t3348qDc7f6OFkAAAAAA
+
+bearer EiFTHxLstZddAeRwg+EvvS0rYcGW9+FkAAAAAA
+
+```
+# fly --target tutorial login --concourse-url http://localhost:8080
+```
+
+</del>
+
+```
+# fly -t tutorial execute -c task_hello_world.yml
+executing build 1 at http://localhost:8080/builds/1
+initializing
+initializing check: image
+selected worker: b648d692ca95
+selected worker: b648d692ca95
+waiting for docker to come up...
+Pulling busybox@sha256:023917ec6a886d0e8e15f28fb543515a5fcd8d938edb091e8147db4efed388ee...
+docker.io/library/busybox@sha256:023917ec6a886d0e8e15f28fb543515a5fcd8d938edb091e8147db4efed388ee: Pulling from library/busybox
+3f4d90098f5b: Pulling fs layer
+3f4d90098f5b: Verifying Checksum
+3f4d90098f5b: Download complete
+3f4d90098f5b: Pull complete
+Digest: sha256:023917ec6a886d0e8e15f28fb543515a5fcd8d938edb091e8147db4efed388ee
+Status: Downloaded newer image for busybox@sha256:023917ec6a886d0e8e15f28fb543515a5fcd8d938edb091e8147db4efed388ee
+docker.io/library/busybox@sha256:023917ec6a886d0e8e15f28fb543515a5fcd8d938edb091e8147db4efed388ee
+
+Successfully pulled busybox@sha256:023917ec6a886d0e8e15f28fb543515a5fcd8d938edb091e8147db4efed388ee.
+
+selected worker: b648d692ca95
+running echo hello world
+hello world
+succeeded
+```
+
+#### 【原因不明】Ubuntu のイメージは取得できないが、CentOSのイメージは取得できる
+
+- 具体的には、
+
+- `task_ubuntu_uname.yml` を以下とする
+
+    ```
+    ---
+    platform: linux
+
+    image_resource:
+    type: docker-image
+    source: {repository: ubuntu}
+
+    run:
+    path: uname
+    args: [-a]
+    ```
+
+- 結果は以下となる
+
+    ```
+    ---
+    # fly -t tutorial execute -c task_ubuntu_uname.yml 
+    executing build 24 at http://localhost:8080/builds/24
+    initializing
+    initializing check: image
+    selected worker: b648d692ca95
+    version is missing from previous step
+    version is missing from previous step
+    errored
+    ```
+
+- `task_centos_uname.yml` を以下とする
+
+    ```
+    ---
+    platform: linux
+
+    image_resource:
+    type: docker-image
+    source: {repository: centos}
+
+    run:
+    path: uname
+    args: [-a]
+    ```
+
+- 結果は以下となる
+
+    ```
+    # fly -t tutorial execute -c task_centos_uname.yml 
+    executing build 25 at http://localhost:8080/builds/25
+    initializing
+    initializing check: image
+    selected worker: b648d692ca95
+    selected worker: b648d692ca95
+    INFO: found existing resource cache
+
+    selected worker: b648d692ca95
+    running uname -a
+    Linux 5f60ecea-3080-40bf-4e32-f9461811acfc 6.4.10-1.el7.elrepo.x86_64 #1 SMP PREEMPT_DYNAMIC Fri Aug 11 12:54:18 EDT 2023 x86_64 x86_64 x86_64 GNU/Linux
+    ```
+
+- CentOS は成功するのに、Ubutuが失敗する原因が不明
+
+- 原因が分からないので、今後はCentOSのイメージでチュートリアルを実行する
+
+### Task inputs について
+
+- 以下のサイトを参考にして実施
+
+    https://concoursetutorial-ja.site.lkj.io/basics/task-inputs
+
+- 以下のコマンドを実行
+
+    ```
+    # pwd
+    /root/concourse-tutorial/tutorials/basic/task-hello-world
+    # cd ../task-inputs/
+    ```
+
+    ```
+    # fly -t tutorial execute -c no_inputs.yml
+    executing build 27 at http://localhost:8080/builds/27
+    initializing
+    initializing check: image
+    selected worker: b648d692ca95
+    selected worker: b648d692ca95
+    INFO: found existing resource cache
+
+    selected worker: b648d692ca95
+    running ls -al
+    total 0
+    drwxr-xr-x    2 root     root             6 Aug 20 01:53 .
+    drwxr-xr-x    3 root     root            22 Aug 20 01:53 ..
+    succeeded    
+    ```
+
+    - 現在のディレクトリが必要な入力と同じ名前であれば、 fly execute -iオプションを削除することができます。
+
+    ```
+    # cat input_parent_dir.yml
+    ---
+    platform: linux
+
+    image_resource:
+    type: docker-image
+    source: {repository: busybox}
+
+    inputs:
+    - name: task-inputs
+
+    run:
+    path: ls
+    args: ["-alR"]
+    ```
+
+    ```
+    # fly -t tutorial execute -c input_parent_dir.yml
+    uploading task-inputs   done
+    executing build 30 at http://localhost:8080/builds/30
+    initializing
+    initializing check: image
+    selected worker: b648d692ca95
+    selected worker: b648d692ca95
+    INFO: found existing resource cache
+
+    selected worker: b648d692ca95
+    running ls -alR
+    .:
+    total 0
+    drwxr-xr-x    3 root     root            25 Aug 20 02:03 .
+    drwxr-xr-x    3 root     root            22 Aug 20 02:03 ..
+    drwxr-xr-x    1 root     root             6 Aug 20 02:03 task-inputs
+
+    ./task-inputs:
+    total 16
+    drwxr-xr-x    1 root     root             6 Aug 20 02:03 .
+    drwxr-xr-x    3 root     root            25 Aug 20 02:03 ..
+    -rw-r--r--    1 root     root           155 Aug 19 11:15 input_parent_dir.yml
+    -rw-r--r--    1 root     root           164 Aug 19 11:15 inputs_required.yml
+    -rw-r--r--    1 root     root           123 Aug 19 11:15 no_inputs.yml
+    -rwxr-xr-x    1 root     root           522 Aug 19 11:15 test.sh
+    succeeded
+    ```
+
+## Task スクリプトを別ファイルとして指定する
+
+- 以下を参考に実施
+
+    https://concoursetutorial-ja.site.lkj.io/basics/task-scripts
+
+- 以下を実行
+
+    ```
+    # cd ../task-scripts
+    # fly -t tutorial execute -c task_show_uname.yml
+    ```
+
+    - 結果
+
+    ```
+    # fly -t tutorial execute -c task_show_uname.yml
+    uploading task-scripts   done
+    executing build 31 at http://localhost:8080/builds/31
+    initializing
+    initializing check: image
+    selected worker: b648d692ca95
+    selected worker: b648d692ca95
+    INFO: found existing resource cache
+
+    selected worker: b648d692ca95
+    running /bin/sh ./task-scripts/task_show_uname.sh
+    Linux 969c72c4-a179-42e9-4ecb-f81fc9e512a9 6.4.10-1.el7.elrepo.x86_64 #1 SMP PREEMPT_DYNAMIC Fri Aug 11 12:54:18 EDT 2023 x86_64 GNU/Linux
+    succeeded    
+    ```
+
+## ベーシックなパイプライン
+
+- 以下を参考にして実施
+
+    https://concoursetutorial-ja.site.lkj.io/basics/basic-pipeline
+
+- 以下のコマンドを実行
+
+    ```
+    # cd ../basic-pipeline
+    # fly -t tutorial set-pipeline -c pipeline.yml -p hello-world
+    ```
+
+    - 結果
+
+        ```
+        # fly -t tutorial set-pipeline -c pipeline.yml -p hello-world
+        jobs:
+        job job-hello-world has been added:
+        + name: job-hello-world
+        + plan:
+        + - config:
+        +     image_resource:
+        +       name: ""
+        +       source:
+        +         repository: busybox
+        +       type: docker-image
+        +     platform: linux
+        +     run:
+        +       args:
+        +       - hello world
+        +       path: echo
+        +   task: hello-world
+        + public: true
+        
+        pipeline name: hello-world
+
+        apply configuration? [yN]: y
+        pipeline created!
+        you can view your pipeline here: http://localhost:8080/teams/main/pipelines/hello-world
+
+        the pipeline is currently paused. to unpause, either:
+        - run the unpause-pipeline command:
+            fly -t tutorial unpause-pipeline -p hello-world
+        - click play next to the pipeline in the web ui
+        ```
+
+## Concourse の Web UI にログインする
+
+- 以下のURLにアクセスする
+
+    　　http://10.1.1.200:8080/sky/issuer/auth/local/login?back=&state=n6kkoemwh5xbbrwma466vpee3
+
+- username: `test` password `test` でログイン
+
+<del>
+
+- `invalid state token` と表示されるので以下のコマンドを実行
+
+</del>
 
 
