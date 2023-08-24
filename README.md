@@ -2240,14 +2240,20 @@ Response: {"error":"access_denied","error_description":"Invalid username or pass
 
 - 更に以下のコマンドを実行すると
 
+
     ```
     # fly --target tutorial login --concourse-url http://localhost:8080
     ```
+
+<del>
 
     または
     ```
     # fly --target tutorial login --concourse-url http://10.1.1.200:8080
     ```
+
+</del>
+
 
     - 問合せ
 
@@ -2610,6 +2616,7 @@ succeeded
 
     https://github.com/moriyamaES/concourse-tutorial
 
+<del>
 
 - 以下のコマンドを実行
 
@@ -2681,6 +2688,8 @@ succeeded
         - task: hello-world
             file: resource-tutorial/tutorials/basic/task-hello-world/task_konnichiha_sekei.yml
     ```
+
+</del>
 
 #### ここで、git push を実行すると認証エラーが発生した
 
@@ -2782,12 +2791,90 @@ succeeded
     * [new branch]      add-featur -> add-featur
     ```
 
+#### マニフェストファイルの修正
 
+- 以下のコマンドを実行
+
+    ```
+    # cd ~/concourse-tutorial
+    ```
+
+- `develop`ブランチにチェックアウト
+
+
+    ```
+    [root@control-plane ~/concourse-tutorial (add-featur)]
+    # git branch 
+    * add-featur
+    master
+    [root@control-plane ~/concourse-tutorial (add-featur)]
+    # git checkout develop
+    branch 'develop' set up to track 'origin/develop'.
+    Switched to a new branch 'develop'
+    ```    
+
+    ```
+    [root@control-plane ~/concourse-tutorial (add-featur)]
+    # git branch 
+    * add-featur
+    master
+    [root@control-plane ~/concourse-tutorial (add-featur)]
+    # git checkout develop
+    branch 'develop' set up to track 'origin/develop'.
+    Switched to a new branch 'develop'
+    ```
+
+    ```
+    [root@control-plane ~/concourse-tutorial (develop)]
+    # pwd
+    /root/concourse-tutorial
+    [root@control-plane ~/concourse-tutorial (develop)]
+    # cd ~/concourse-tutorial/tutorials/basic/pipeline-resources/
+    [root@control-plane ~/concourse-tutorial/tutorials/basic/pipeline-resources (develop)]    
+    ```
+
+- task-hello-world.yml をコピーして`args: [こんにちは世界]`に変更して、 `task_konnichiha_sekei.yml` を作成
 
     ```
     # pwd
     /root/concourse-tutorial-fork/tutorials/basic/pipeline-resources
+    # cat ../task-hello-world/task_konnichiha_sekei.yml 
+    ---
+    platform: linux
+
+    image_resource:
+    type: docker-image
+    source: {repository: busybox}
+
+    run:
+    path: echo
+    args: [こんにちは世界]
+      ```
+
+- pipeline.yml をコピーしてuriを`uri: https://github.com/moriyamaES/concourse-tutorial-fork`に変更し、`file: resource-tutorial/tutorials/basic/task-hello-world/task_konnichiha_sekei.yml` pipeline-fork.yml 作成
+
     ```
+    [root@control-plane ~/concourse-tutorial-fork/tutorials/basic/pipeline-resources (master)]
+    # cat pipeline-fork.yml 
+    ---
+    resources:
+    - name: resource-tutorial
+        type: git
+        source:
+        uri: https://github.com/moriyamaES/concourse-tutorial
+
+        branch: develop
+
+    jobs:
+    - name: job-hello-world
+        public: true
+        plan:
+        - get: resource-tutorial
+        - task: hello-world
+            file: resource-tutorial/tutorials/basic/task-hello-world/task_konnichiha_sekei.yml
+    ```
+
+- 以下のコマンドを実行
 
     ```
     # fly -t tutorial set-pipeline -c pipeline-fork.yml -p hello-world
@@ -2823,10 +2910,12 @@ succeeded
 -  concourse にログイン
 
     ```
-    # fly --target tutorial login --concourse-url http://10.1.1.200:8080
+    # fly --target tutorial login --concourse-url http://localhost:8080
+    
     ```
 
     - 表示されたURLでブラウザにアクセスし、表示されたトークンを`(input hidden):`の後ろにコピーする
+
 
         ```
         logging in to team 'main'
@@ -2837,3 +2926,286 @@ succeeded
 
         or enter token manually (input hidden): 
         ```
+
+
+    - 以下のように成功
+
+        ![成功](./img/無題3.png)
+
+## Job の出力結果をターミナルで確認する
+
+- 以下のサイトを参考に実施
+
+    https://concoursetutorial-ja.site.lkj.io/basics/watch-job-output
+
+
+## Job を起動する
+
+- 以下のサイトを参考に実施
+
+    https://concoursetutorial-ja.site.lkj.io/basics/trigger-jobs#job
+
+
+## Resource を使って Job を起動する
+
+- 以下のサイトを参考に実施
+
+    https://concoursetutorial-ja.site.lkj.io/basics/triggers
+
+
+- パイプラインを削除するため、以下のコマンドを実行
+
+    ```
+    # fly -t tutorial destroy-pipeline -p simple-app
+    ```
+
+
+
+## 成功した Task の outputs を別の Task の inputs にする
+
+- 以下のサイトを参考に実施
+
+    https://concoursetutorial-ja.site.lkj.io/basics/task-outputs-to-inputs
+
+
+- パイプラインを削除するため、以下のコマンドを実行
+
+    ```
+    # fly -t tutorial destroy-pipeline -p pass-files
+    ```
+
+
+## ビルドの成果物をアップロードする
+
+- 以下のサイトを参考に実施
+
+    https://concoursetutorial-ja.site.lkj.io/basics/publishing-outputs
+
+- オリジナルのクーロンでないと動作しない可能性があるため以下を実行
+
+    ```
+    # cd ~
+    ```
+
+    ```
+    # git clone https://github.com/starkandwayne/concourse-tutorial.git
+    ```
+
+    ```
+    # cd ~/concourse-tutorial/tutorials/basic/publishing-outputs/
+    ```
+
+　- 以下のエラーが発生
+
+    ```
+    # fly -t tutorial check-resource -r publishing-outputs/resource-gist
+    checking publishing-outputs/resource-gist in build 8
+    initializing check: resource-gist
+    selected worker: 362b96bfa8d2
+    Error loading key "/tmp/git-resource-private-key": error in libcrypto
+    failed
+    ```
+
+### OpenSSH をアップグレード
+
+- アップグレード前
+
+    ```
+    # openssl version
+    OpenSSL 1.0.2k-fips  26 Jan 2017 
+    ```
+
+- OSのバージョン確認
+
+    ```
+    # cat /etc/redhat-release
+    CentOS Linux release 7.9.2009 (Core)
+    ```
+- インストールされているパッケージの確認
+
+    ```
+    # rpm -qa | egrep ^openssl-
+    openssl-1.0.2k-19.el7.x86_64
+    openssl-libs-1.0.2k-19.el7.x86_64
+    ```
+
+-  アップデートの実施
+
+    ```
+    # yum update openssl-*
+    読み込んだプラグイン:fastestmirror, langpacks
+    Loading mirror speeds from cached hostfile
+    * base: ftp.tsukuba.wide.ad.jp
+    * elrepo: ftp.ne.jp
+    * extras: ftp.tsukuba.wide.ad.jp
+    * updates: ftp.tsukuba.wide.ad.jp
+    base                                                 | 3.6 kB     00:00     
+    docker-ce-stable                                     | 3.5 kB     00:00     
+    elrepo                                               | 3.0 kB     00:00     
+    extras                                               | 2.9 kB     00:00     
+    ius                                                  | 1.3 kB     00:00     
+    updates                                              | 2.9 kB     00:00     
+    依存性の解決をしています
+    --> トランザクションの確認を実行しています。
+    ---> パッケージ openssl.x86_64 1:1.0.2k-19.el7 を 更新
+    ---> パッケージ openssl.x86_64 1:1.0.2k-26.el7_9 を アップデート
+    ---> パッケージ openssl-libs.x86_64 1:1.0.2k-19.el7 を 更新
+    ---> パッケージ openssl-libs.x86_64 1:1.0.2k-26.el7_9 を アップデート
+    --> 依存性解決を終了しました。
+
+    依存性を解決しました
+
+    ============================================================================
+    Package           アーキテクチャー
+                                バージョン                リポジトリー  容量
+    ============================================================================
+    更新します:
+    openssl           x86_64      1:1.0.2k-26.el7_9         updates      494 k
+    openssl-libs      x86_64      1:1.0.2k-26.el7_9         updates      1.2 M
+
+    トランザクションの要約
+    ============================================================================
+    更新  2 パッケージ
+
+    合計容量: 1.7 M
+    Is this ok [y/d/N]: y
+    Downloading packages:
+    Running transaction check
+    Running transaction test
+    Transaction test succeeded
+    Running transaction
+    更新します              : 1:openssl-libs-1.0.2k-26.el7_9.x86_64       1/4 
+    更新します              : 1:openssl-1.0.2k-26.el7_9.x86_64            2/4 
+    整理中                  : 1:openssl-1.0.2k-19.el7.x86_64              3/4 
+    整理中                  : 1:openssl-libs-1.0.2k-19.el7.x86_64         4/4 
+    検証中                  : 1:openssl-libs-1.0.2k-26.el7_9.x86_64       1/4 
+    検証中                  : 1:openssl-1.0.2k-26.el7_9.x86_64            2/4 
+    検証中                  : 1:openssl-libs-1.0.2k-19.el7.x86_64         3/4 
+    検証中                  : 1:openssl-1.0.2k-19.el7.x86_64              4/4 
+
+    更新:
+    openssl.x86_64 1:1.0.2k-26.el7_9   openssl-libs.x86_64 1:1.0.2k-26.el7_9  
+
+    完了しました!
+    ```
+
+- OpenSSLパッケージのバージョン確認
+
+    ```
+    # rpm -qa | egrep ^openssl-
+    openssl-1.0.2k-26.el7_9.x86_64
+    openssl-libs-1.0.2k-26.el7_9.x86_64
+    ```
+
+
+
+
+- パイプラインを削除するため、以下のコマンドを実行
+
+
+    ```
+    # fly -t tutorial publishing-outputs -p pass-files
+    ```
+
+
+
+
+
+
+```
+# fly -t tutorial trigger-job -j publishing-outputs/job-bump-date -w
+started publishing-outputs/job-bump-date #1
+
+selected worker: df635a5eda68
+Cloning into '/tmp/build/get'...
+a3edcb3 restrict mkdocs packages until can make time to upgrade https://ci2.starkandwayne.com/teams/starkandwayne/pipelines/concourse-tutorial/jobs/website-master/builds/32
+selected worker: df635a5eda68
+Identity added: /tmp/git-resource-private-key (/tmp/git-resource-private-key)
+Cloning into '/tmp/build/get'...
+a858dcf
+initializing
+initializing check: image
+selected worker: df635a5eda68
+selected worker: df635a5eda68
+waiting for docker to come up...
+Pulling bitnami/concourse@sha256:08d5255cf32ffaabdd027b5de81c4f659a7d6b4d957e248094b8c6d18b118f16...
+docker.io/bitnami/concourse@sha256:08d5255cf32ffaabdd027b5de81c4f659a7d6b4d957e248094b8c6d18b118f16: Pulling from bitnami/concourse
+2744dfbb76fb: Pulling fs layer
+2744dfbb76fb: Verifying Checksum
+2744dfbb76fb: Download complete
+2744dfbb76fb: Pull complete
+Digest: sha256:08d5255cf32ffaabdd027b5de81c4f659a7d6b4d957e248094b8c6d18b118f16
+Status: Downloaded newer image for bitnami/concourse@sha256:08d5255cf32ffaabdd027b5de81c4f659a7d6b4d957e248094b8c6d18b118f16
+docker.io/bitnami/concourse@sha256:08d5255cf32ffaabdd027b5de81c4f659a7d6b4d957e248094b8c6d18b118f16
+
+Successfully pulled bitnami/concourse@sha256:08d5255cf32ffaabdd027b5de81c4f659a7d6b4d957e248094b8c6d18b118f16.
+
+selected worker: df635a5eda68
+running resource-tutorial/tutorials/basic/publishing-outputs/bump-timestamp-file.sh
++ git clone resource-gist updated-gist
+resource-tutorial/tutorials/basic/publishing-outputs/bump-timestamp-file.sh: 6: git: not found
+failed
+```
+
+
+```
+# fly -t tutorial trigger-job -j publishing-outputs/job-bump-date -w
+started publishing-outputs/job-bump-date #2
+
+selected worker: df635a5eda68
+Cloning into '/tmp/build/get'...
+e710e9c updating with instructions and minor tweaks for static site hosting on GCS
+selected worker: df635a5eda68
+INFO: found existing resource cache
+
+initializing
+initializing check: image
+selected worker: df635a5eda68
+selected worker: df635a5eda68
+INFO: found existing resource cache
+
+selected worker: df635a5eda68
+running resource-tutorial/tutorials/basic/publishing-outputs/bump-timestamp-file.sh
++ git clone resource-gist updated-gist
+resource-tutorial/tutorials/basic/publishing-outputs/bump-timestamp-file.sh: 6: git: not found
+failed
+```
+
+```
+User
+以下のようになっている
+
+[root@control-plane ~/concourse-tutorial/tutorials/basic/publishing-outputs (master)]
+# cat bump-timestamp-file.sh
+#!/bin/sh
+
+set -e # fail fast
+set -x # print commands
+
+git clone resource-gist updated-gist
+
+cd updated-gist
+date > bumpme
+
+git config --global user.email "nobody@concourse-ci.org"
+git config --global user.name "Concourse"
+
+git add .
+git commit -m "Bumped date"
+ChatGPT
+提供いただいたスクリプトを見ると、git clone 以降の git コマンドが問題を引き起こしている可能性が高いです。
+
+git clone が正しく実行されているため、git コマンドが存在していること自体は問題ありません。エラーメッセージによると、具体的に git: not found エラーが bump-timestamp-file.sh スクリプト内で発生しています。したがって、このスクリプトが実行される環境で git コマンドが見つからないという問題が考えられます。
+
+シェルスクリプトが実行されるコンテキストにおいて、git コマンドのパスが適切に設定されているか確認する必要があります。一般的なシェルスクリプト内での git コマンドの実行方法は、提供いただいたスクリプトの記述方法と一致しています。したがって、次の手順を試してみてください：
+
+bump-timestamp-file.sh スクリプトが正しい場所に存在していることを確認します。
+
+シェルスクリプトが実行されるディレクトリで、コマンド git を実行できることを確認してください。ターミナルで直接 git コマンドを実行してみて、問題なく動作するか確認します。
+
+もしスクリプトを別のディレクトリから実行している場合、そのディレクトリ内での git コマンドの実行が可能であることを確認します。
+
+もしどのようなシェルがスクリプトを実行しているかによって、環境変数やパスが影響を受ける可能性があります。スクリプトがどのシェルで実行されているかを確認し、そのシェルの設定が適切であることを確認します。
+
+これらの手順を試しても問題が解決しない場合、詳細な状況やコンテキストに関する情報が必要になるかもしれません。可能であれば、スクリプトの実行環境やコンテキストに関する詳細な情報を提供していただけると、より具体的なアドバイスを提供できるかと思います。
+```
